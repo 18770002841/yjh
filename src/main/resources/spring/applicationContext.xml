@@ -39,21 +39,24 @@
         <!-- 依赖注入上面定义的sessionFactory -->
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
-    <!--声明使用注解式事务-->
+    <!--开启spring事务注解-->
+    <tx:annotation-driven />
+    <!--&lt;!&ndash;声明使用注解式事务&ndash;&gt;
     <tx:annotation-driven transaction-manager="transactionManager"/>
-    <!--该配置创建了一个TransactionInterceptor的bean，作为事务切面的执行方法-->
+    &lt;!&ndash;该配置创建了一个TransactionInterceptor的bean，作为事务切面的执行方法&ndash;&gt;
     <tx:advice id="defaultTxAdvice">
         <tx:attributes>
             <tx:method name="*" rollback-for="Exception"/>
         </tx:attributes>
     </tx:advice>
 
-    <!--该配置创建了一个DefaultBeanFactoryPointcutAdvisor的bean，该bean是一个advisor,
-    里面包含了pointcut和advice.前者说明切面加在哪里，后者是执行逻辑。此处可以配多个advisor-->
+    &lt;!&ndash;该配置创建了一个DefaultBeanFactoryPointcutAdvisor的bean，该bean是一个advisor,
+    里面包含了pointcut和advice.前者说明切面加在哪里，后者是执行逻辑。此处可以配多个advisor&ndash;&gt;
     <aop:config>
         <aop:pointcut id="myCut" expression="(execution(* *..*impl.*(..))) "/>
         <aop:advisor pointcut-ref="myCut" advice-ref="defaultTxAdvice"/>
-    </aop:config>
+    </aop:config>-->
+
 
 
     <!-- aop测试,需要引入aop命名空间 -->
