@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+    <context:component-scan base-package="com.yjh.firstPJ"/>
+    <context:annotation-config/>
+
+    <context:property-placeholder location="classpath:properties/*.properties"/>
+
+    <!-- 定义使用C3P0连接池的数据源 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClass" value="${mysql.driverClass}"/>
+        <property name="jdbcUrl" value="${mysql.jdbcUrl}"/>
+        <!-- 连接数据库的用户名 -->
+        <property name="user" value="${mysql.user}"/>
+        <!-- 连接数据库的密码 -->
+        <property name="password" value="${mysql.password}"/>
+    </bean>
+    <!-- 依赖注入上面定义的数据源dataSource -->
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath*:mybatis/sqlMapConfig.xml"/>
+    </bean>
+    <!--配置扫描器，扫描指定路径的mapper生成数据库操作代理类-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="annotationClass" value="javax.annotation.Resource"></property>
+        <property name="basePackage" value="com.test.***.dal.***.mapper"/>
+        <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+    </bean>
+    <!--定义Hibernate的事务管理器HibernateTransactionManager -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 依赖注入上面定义的sessionFactory -->
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <!--声明使用注解式事务-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!--该配置创建了一个TransactionInterceptor的bean，作为事务切面的执行方法-->
+    <tx:advice id="defaultTxAdvice">
+        <tx:attributes>
+            <tx:method name="*" rollback-for="Exception"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--该配置创建了一个DefaultBeanFactoryPointcutAdvisor的bean，该bean是一个advisor,
+    里面包含了pointcut和advice.前者说明切面加在哪里，后者是执行逻辑。此处可以配多个advisor-->
+    <aop:config>
+        <aop:pointcut id="myCut" expression="(execution(* *..*impl.*(..))) "/>
+        <aop:advisor pointcut-ref="myCut" advice-ref="defaultTxAdvice"/>
+    </aop:config>
+
+
+    <!-- aop测试,需要引入aop命名空间 -->
+    <!-- <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+    &lt;!&ndash; aop xmlType，用xml的形式配置AOP前置通知 &ndash;&gt;
+    &lt;!&ndash; 切面的bean &ndash;&gt;
+    <bean class="com.aop.xmltype.MyAspectxml" id="myaspxml"></bean>
+    <bean class="com.aop.xmltype.Diary" id="myDiary"></bean>
+    &lt;!&ndash; aop xmlType，用xml的形式配置AOP前置通知 &ndash;&gt;
+    <aop:config>
+        &lt;!&ndash; 配置切面和通知 ，aop:aspect标签需要通过ref指定配置好的bean，id随便配置或者不配置，id的值可以随意起 &ndash;&gt;
+        <aop:aspect id="myaspxml" ref="myaspxml" order="2">
+            <aop:pointcut expression="execution (* com.aop.xmltype.CalculatorImplxml.*(..))" id="pointcut1" />
+            <aop:before method="logBefore" pointcut-ref="pointcut1" />
+            <aop:after method="logAfter" pointcut-ref="pointcut1" />
+        </aop:aspect>
+        <aop:aspect ref="myDiary" order="3">
+            <aop:pointcut expression="execution (* com.aop.xmltype.CalculatorImplxml.*(..))" id="allPointcut"/>
+            <aop:before method="myEnd" pointcut-ref="allPointcut"/>
+        </aop:aspect>
+    </aop:config> -->
+
+
+</beans>
